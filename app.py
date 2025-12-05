@@ -1,5 +1,6 @@
 import io
 import os
+import re
 from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
 
@@ -23,6 +24,11 @@ DESG_BOX = (357, 722, 807, 855)
 NAME_FONT_PATH = "assets/Poppins-SemiBold.ttf"
 DESG_FONT_PATH = "assets/Poppins-Medium.ttf"
 
+
+# Utility functions
+
+def is_english_text(text):
+    return re.fullmatch(r"[A-Za-z0-9 .,'’\-]+", text or "") is not None
 
 # Image Processing Function
 
@@ -84,25 +90,26 @@ def add_text_fit_centered(
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
 
-    # If text exceeds width or height, scale down
+    # Scale down if needed
     if text_width > allowed_width or text_height > allowed_height:
         width_scale = allowed_width / text_width
         height_scale = allowed_height / text_height
         scale = min(width_scale, height_scale)
-
         font_size = max(min_font_size, int(font_size * scale))
         font = ImageFont.truetype(font_path, font_size)
-
-        # Recompute with final font size
         bbox = draw.textbbox((0, 0), text, font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
 
-    # Horizontal center inside the box
+    # Horizontal centering
     x = box_x1 + (allowed_width - text_width) // 2
 
-    # Vertical center inside the box
+    # Vertical centering (bbox-based)
     y = box_y1 + (allowed_height - text_height) // 2
+
+    # Language-Based Correction
+    if is_english_text(text):
+        y -= 10  # Raise English text slightly
 
     draw.text((x, y), text, font=font, fill=text_color)
     return base_image
@@ -164,7 +171,7 @@ if st.button("Generate Banner"):
                 final,
                 text=designation_text,
                 font_path=DESG_FONT_PATH,
-                max_font_size=34,
+                max_font_size=30,
                 box_x1=DESG_BOX[0],
                 box_x2=DESG_BOX[1],
                 box_y1=DESG_BOX[2],
