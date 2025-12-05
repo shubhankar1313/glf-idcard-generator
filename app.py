@@ -11,10 +11,10 @@ BANNER_PATH = "assets/template.png"
 STANDARD_W = 500
 STANDARD_H = 750
 
-SLOT_X = 245
-SLOT_Y = 85
-SLOT_W = 600
-SLOT_H = 800
+SLOT_X = 330
+SLOT_Y = 210
+SLOT_W = 420
+SLOT_H = 470
 
 # Text boxes (x1, x2, y1, y2)
 NAME_BOX = (285, 795, 705, 785)
@@ -24,33 +24,34 @@ NAME_FONT_PATH = "assets/Poppins-SemiBold.ttf"
 DESG_FONT_PATH = "assets/Poppins-Medium.ttf"
 
 
-# Image Processing Functions
+# Image Processing Function
 
-def resize_input_image(img):
-    img.thumbnail((STANDARD_W, STANDARD_H), Image.LANCZOS)
-    background = Image.new("RGBA", (STANDARD_W, STANDARD_H), (0, 0, 0, 0))
-    x = (STANDARD_W - img.width) // 2
-    y = (STANDARD_H - img.height) // 2
-    background.paste(img, (x, y))
-    return background
+def fit_image_to_frame(img, frame_w, frame_h):
+    """
+    Resizes the image to fill the frame completely (cover fit)
+    while keeping aspect ratio. Crops excess from center.
+    """
+    original_w, original_h = img.size
+    img_ratio = original_w / original_h
+    frame_ratio = frame_w / frame_h
 
-def fit_image_to_slot(img, slot_w, slot_h):
-    img_ratio = img.width / img.height
-    slot_ratio = slot_w / slot_h
-
-    if img_ratio > slot_ratio:
-        new_height = slot_h
-        new_width = int(img_ratio * new_height)
+    # If image is wider → match height, crop sides
+    if img_ratio > frame_ratio:
+        new_height = frame_h
+        new_width = int(new_height * img_ratio)
     else:
-        new_width = slot_w
+        # If image is taller → match width, crop top/bottom
+        new_width = frame_w
         new_height = int(new_width / img_ratio)
 
+    # Resize image
     img = img.resize((new_width, new_height), Image.LANCZOS)
 
-    left = (new_width - slot_w) // 2
-    top = (new_height - slot_h) // 2
-    right = left + slot_w
-    bottom = top + slot_h
+    # Center crop
+    left = (new_width - frame_w) // 2
+    top = (new_height - frame_h) // 2
+    right = left + frame_w
+    bottom = top + frame_h
 
     return img.crop((left, top, right, bottom))
 
@@ -135,9 +136,8 @@ if st.button("Generate Banner"):
             # Load uploaded photo
             person_img = Image.open(uploaded_file).convert("RGBA")
 
-            # Standardize & fit person image
-            person_img = resize_input_image(person_img)
-            fitted_img = fit_image_to_slot(person_img, SLOT_W, SLOT_H)
+            # Fit image exactly into the frame (cover fit)
+            fitted_img = fit_image_to_frame(person_img, SLOT_W, SLOT_H)
 
             # Place in background
             background = Image.new("RGBA", banner.size, (0, 0, 0, 0))
