@@ -7,7 +7,7 @@ import streamlit as st
 
 # Configuration
 
-BANNER_PATH = "assets/template.png"
+TEMPLATE_PATH = "assets/template.png"
 
 STANDARD_W = 500
 STANDARD_H = 750
@@ -117,15 +117,15 @@ def add_text_fit_centered(
 
 # Streamlit UI
 
-st.set_page_config(page_title="GLF Banner Generator", layout="centered")
-st.title("GLF Banner Generator")
-st.write("Upload a photo and enter Name & Designation to generate a banner.")
+st.set_page_config(page_title="GLF ID Card Generator", layout="centered")
+st.title("GLF ID Card Generator")
+st.write("Upload a photo and enter name & designation to generate an ID card.")
 
 uploaded_file = st.file_uploader("Upload Photo", type=["jpg", "jpeg", "png"])
 name_text = st.text_input("Full Name")
 designation_text = st.text_input("Designation")
 
-if st.button("Generate Banner"):
+if st.button("Generate ID Card"):
 
     if uploaded_file is None:
         st.error("Please upload a photo.")
@@ -134,11 +134,11 @@ if st.button("Generate Banner"):
     elif not designation_text.strip():
         st.error("Please enter a designation.")
     else:
-        if not os.path.exists(BANNER_PATH):
-            st.error(f"Banner template not found: {BANNER_PATH}")
+        if not os.path.exists(TEMPLATE_PATH):
+            st.error(f"ID card template not found: {TEMPLATE_PATH}")
         else:
-            # Load banner
-            banner = Image.open(BANNER_PATH).convert("RGBA")
+            # Load ID card template
+            id_card = Image.open(TEMPLATE_PATH).convert("RGBA")
 
             # Load uploaded photo
             person_img = Image.open(uploaded_file).convert("RGBA")
@@ -147,11 +147,11 @@ if st.button("Generate Banner"):
             fitted_img = fit_image_to_frame(person_img, SLOT_W, SLOT_H)
 
             # Place in background
-            background = Image.new("RGBA", banner.size, (0, 0, 0, 0))
+            background = Image.new("RGBA", id_card.size, (0, 0, 0, 0))
             background.paste(fitted_img, (SLOT_X, SLOT_Y))
 
-            # Merge with banner
-            final = Image.alpha_composite(background, banner)
+            # Merge with ID Card template
+            final = Image.alpha_composite(background, id_card)
 
             # Add NAME (auto-fit)
             final = add_text_fit_centered(
@@ -181,7 +181,7 @@ if st.button("Generate Banner"):
 
             # Display
             display_width = min(final.width, 900)
-            st.image(final, caption="Generated Banner", width=display_width)
+            st.image(final, caption="Generated ID Card", width=display_width)
 
             # Download
             img_bytes = io.BytesIO()
@@ -189,8 +189,8 @@ if st.button("Generate Banner"):
             img_bytes.seek(0)
 
             st.download_button(
-                label="Download Banner",
+                label="Download ID Card",
                 data=img_bytes,
-                file_name="final_banner.png",
+                file_name="final_id_card.png",
                 mime="image/png"
             )
